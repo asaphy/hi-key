@@ -1,0 +1,48 @@
+paths:
+    /song/{title}:
+        get:
+            description: Get song
+            operationId: SongRequest
+            parameters:
+                - description: Title of the song
+                  in: path
+                  name: title
+                  required: true
+                  type: string
+                  x-go-name: Title
+            responses:
+                "200":
+                    $ref: '#/responses/Song'
+                "400":
+                    $ref: '#/responses/CommonError'
+            security:
+                - apiKey:
+                    - '[]'
+responses:
+    CommonError:
+        description: ""
+        headers:
+            message:
+                description: |-
+                    Message of the error
+                    in: string
+                type: string
+            status:
+                description: |-
+                    Status of the error
+                    in: int64
+                format: int64
+                type: integer
+    Song:
+        description: ""
+        headers:
+            first_chord:
+                type: string
+            high_note:
+                type: string
+            key:
+                type: string
+            title:
+                description: 'in: string'
+                type: string
+swagger: "2.0"
