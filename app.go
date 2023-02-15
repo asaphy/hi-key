@@ -46,7 +46,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/song/{title}", returnSingleSong).Methods(http.MethodGet)
 	// documentation for developers
 	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
-	opts := middleware.SwaggerUIOpts{SpecURL: "/swagger.yaml"}
+	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
 	sh := middleware.SwaggerUI(opts, nil)
 	myRouter.Handle("/docs", sh)
 	// finally, instead of passing in nil, we want
