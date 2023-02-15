@@ -52,7 +52,7 @@ func handleRequests() {
 	// finally, instead of passing in nil, we want
 	// to pass in our newly created router as the second
 	// argument
-	log.Fatal(http.ListenAndServe(":80", myRouter))
+	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
 // swagger:route GET /song/{title} SongRequest
