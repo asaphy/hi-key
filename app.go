@@ -31,13 +31,9 @@ type CommonError struct {
 }
 
 var Songs = []Song{
-	Song{Title: "Hello", Key: "A", HighNote: "A", FirstChord: "A"},
-	Song{Title: "Hello1", Key: "A", HighNote: "B", FirstChord: "C"},
-	Song{Title: "Hello 2", Key: "A", HighNote: "A", FirstChord: "A"},
-	Song{Title: "Hello3", Key: "A", HighNote: "A", FirstChord: "A"},
-	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
-	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
-	Song{Title: "Hello5", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Goodness of God", Key: "G", HighNote: "C", FirstChord: "G"},
+	Song{Title: "Great Are You Lord", Key: "G", HighNote: "D", FirstChord: "C"},
+	Song{Title: "Build My Life", Key: "A", HighNote: "F#", FirstChord: "A"},
 }
 
 var AllowedKeys = []string{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
