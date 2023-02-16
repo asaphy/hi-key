@@ -1,15 +1,19 @@
 paths:
-    /api/v0/song/{title}:
+    /api/v0/song/:
         get:
             description: Get song
             operationId: SongRequest
             parameters:
                 - description: Title of the song
-                  in: path
+                  in: query
                   name: title
-                  required: true
                   type: string
                   x-go-name: Title
+                - description: High note of singer
+                  in: query
+                  name: high_note
+                  type: string
+                  x-go-name: HighNote
             responses:
                 "200":
                     $ref: '#/responses/Song'

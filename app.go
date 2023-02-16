@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/go-openapi/runtime/middleware"
+	"golang.org/x/exp/slices"
 )
 
 // swagger:response Song
@@ -28,14 +29,37 @@ type CommonError struct {
 	Message string `json:"message"`
 }
 
-var Songs []Song
+var Songs = []Song{
+	Song{Title: "Hello", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello1", Key: "A", HighNote: "B", FirstChord: "C"},
+	Song{Title: "Hello2", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello3", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello5", Key: "A", HighNote: "A", FirstChord: "A"},
+}
+
+var AllowedKeys = []string{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
+
+var KeyChords = map[string][]string{
+	"C": []string{"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"},
+	"C#": []string{"C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C"},
+	"D": []string{"D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#"},
+	"D#": []string{"D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D"},
+	"E": []string{"E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#"},
+	"F": []string{"F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E"},
+	"F#": []string{"F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F"},
+	"G": []string{"G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#"},
+	"G#": []string{"G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G"},
+	"A": []string{"A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"},
+	"A#": []string{"A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A"},
+	"B": []string{"B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#"},
+}
 
 
 func handleRequests() {
-	// creates a new instance of a mux router
 	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/api/v0/all", returnAllSongs).Methods(http.MethodGet)
-	myRouter.HandleFunc("/api/v0/song/{title}", returnSingleSong).Methods(http.MethodGet)
+	myRouter.HandleFunc("/api/v0/song/", returnSingleSong).Methods(http.MethodGet)
 	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
 	sh := middleware.SwaggerUI(opts, nil)
@@ -43,7 +67,7 @@ func handleRequests() {
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
-// swagger:route GET /api/v0/song/{title} SongRequest
+// swagger:route GET /api/v0/song/ SongRequest
 // Get song
 // 
 // security:
@@ -53,47 +77,62 @@ func handleRequests() {
 //  200: Song
 //  400: CommonError
 func returnSingleSong(w http.ResponseWriter, r *http.Request){
-	vars := mux.Vars(r)
-	title := vars["title"]
+	title := r.URL.Query().Get("title")
+	high_note := r.URL.Query().Get("high_note")
+	
+	if !slices.Contains(AllowedKeys, high_note) {
+		errorMessage := fmt.Sprintln("The high_note provided:", high_note, "is not valid. Note: Currently, we do not support flats.")
+		json.NewEncoder(w).Encode(CommonError{Status: 400, Message: errorMessage})
+		return
+	}
+
 	// parse title to change - to spaces and lowercase everything
 	for _, song := range Songs {
 		if song.Title == title {
-				json.NewEncoder(w).Encode(song)
+				var step_change = getStepChange(high_note, song.HighNote)
+				json.NewEncoder(w).Encode(Song{Title: song.Title, Key: getKeyFromStepChange(step_change, song.Key), HighNote: high_note, FirstChord: getFirstChordFromStepChange(step_change, song.FirstChord)})
+			  return
 		}
 	}
+	errorMessage := fmt.Sprintln("The song title provided", title, "is not in our library.")
+	json.NewEncoder(w).Encode(CommonError{Status: 400, Message: errorMessage})
 }
+
+func getStepChange(high_note string, original_high_note string) int {
+  var step_change = 0
+  var chords_for_key = KeyChords[original_high_note]
+	for _, chord := range chords_for_key { 
+		if chord == high_note {
+			return step_change
+		}
+		step_change++
+	}
+	return 0
+}
+
+func getKeyFromStepChange(step_change int, original_key string) string {
+	var key = KeyChords[original_key]
+  return key[step_change]
+}
+
+func getFirstChordFromStepChange(step_change int, original_first_chord string) string {
+	var key = KeyChords[original_first_chord]
+	return key[step_change]
+}
+
 
 // swagger:parameters SongRequest
 type SongRequest struct {
 	// Title of the song
-	// in: path
+	// in: query
 	Title string `json:"title"validate:"required,min=2,max=100,alpha_space"`
-}
-
-// swagger:route GET /api/v0/all
-// Get all songs
-// 
-// security:
-// - apiKey: []
-//
-// responses:
-//  200: Song
-//  400: CommonError
-func returnAllSongs(w http.ResponseWriter, r *http.Request){
-	fmt.Println("Endpoint Hit: returnAllSongs")
-	json.NewEncoder(w).Encode(Songs)
+  // High note of singer
+	// in: query
+	HighNote string `json:"high_note"validate:"required,min=1,max=1,alpha_space"`
 }
 
 
 func main() {
-		Songs = []Song{
-				Song{Title: "Hello", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello1", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello2", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello3", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
-				Song{Title: "Hello5", Key: "A", HighNote: "A", FirstChord: "A"},
-		}
+		fmt.Println("Starting..")
     handleRequests()
 }
