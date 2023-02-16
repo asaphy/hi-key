@@ -82,6 +82,7 @@ func returnSingleSong(w http.ResponseWriter, r *http.Request){
 	
 	if !slices.Contains(AllowedKeys, high_note) {
 		errorMessage := fmt.Sprintln("The high_note provided:", high_note, "is not valid. Note: Currently, we do not support flats.")
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(CommonError{Status: 400, Message: errorMessage})
 		return
 	}
@@ -95,6 +96,7 @@ func returnSingleSong(w http.ResponseWriter, r *http.Request){
 		}
 	}
 	errorMessage := fmt.Sprintln("The song title provided", title, "is not in our library.")
+	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(CommonError{Status: 400, Message: errorMessage})
 }
 
