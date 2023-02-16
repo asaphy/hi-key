@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/go-openapi/runtime/middleware"
 	"golang.org/x/exp/slices"
+	"strings"
 )
 
 // swagger:response Song
@@ -32,7 +33,7 @@ type CommonError struct {
 var Songs = []Song{
 	Song{Title: "Hello", Key: "A", HighNote: "A", FirstChord: "A"},
 	Song{Title: "Hello1", Key: "A", HighNote: "B", FirstChord: "C"},
-	Song{Title: "Hello2", Key: "A", HighNote: "A", FirstChord: "A"},
+	Song{Title: "Hello 2", Key: "A", HighNote: "A", FirstChord: "A"},
 	Song{Title: "Hello3", Key: "A", HighNote: "A", FirstChord: "A"},
 	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
 	Song{Title: "Hello4", Key: "A", HighNote: "A", FirstChord: "A"},
@@ -78,8 +79,7 @@ func handleRequests() {
 //  400: CommonError
 func returnSingleSong(w http.ResponseWriter, r *http.Request){
 	title := r.URL.Query().Get("title")
-	high_note := r.URL.Query().Get("high_note")
-	
+	high_note := strings.ToUpper(r.URL.Query().Get("high_note"))
 	if !slices.Contains(AllowedKeys, high_note) {
 		errorMessage := fmt.Sprintln("The high_note provided:", high_note, "is not valid. Note: Currently, we do not support flats.")
 		w.WriteHeader(http.StatusBadRequest)
@@ -89,7 +89,7 @@ func returnSingleSong(w http.ResponseWriter, r *http.Request){
 
 	// parse title to change - to spaces and lowercase everything
 	for _, song := range Songs {
-		if song.Title == title {
+		if strings.ToLower(song.Title) == strings.ToLower(title) {
 				var step_change = getStepChange(high_note, song.HighNote)
 				json.NewEncoder(w).Encode(Song{Title: song.Title, Key: getKeyFromStepChange(step_change, song.Key), HighNote: high_note, FirstChord: getFirstChordFromStepChange(step_change, song.FirstChord)})
 			  return
