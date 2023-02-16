@@ -1,5 +1,5 @@
 paths:
-    /song/{title}:
+    /api/v0/song/{title}:
         get:
             description: Get song
             operationId: SongRequest

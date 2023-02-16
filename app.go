@@ -31,31 +31,19 @@ type CommonError struct {
 var Songs []Song
 
 
-func homePage(w http.ResponseWriter, r *http.Request){
-    fmt.Fprintf(w, "Welcome to the HomePage!")
-    fmt.Println("Endpoint Hit: homePage")
-}
-
-//TODO: version the API
 func handleRequests() {
 	// creates a new instance of a mux router
 	myRouter := mux.NewRouter().StrictSlash(true)
-	// replace http.HandleFunc with myRouter.HandleFunc
-	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/all", returnAllSongs)
-	myRouter.HandleFunc("/song/{title}", returnSingleSong).Methods(http.MethodGet)
-	// documentation for developers
-	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./data")))
+	myRouter.HandleFunc("/api/v0/all", returnAllSongs).Methods(http.MethodGet)
+	myRouter.HandleFunc("/api/v0/song/{title}", returnSingleSong).Methods(http.MethodGet)
+	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
 	sh := middleware.SwaggerUI(opts, nil)
 	myRouter.Handle("/docs", sh)
-	// finally, instead of passing in nil, we want
-	// to pass in our newly created router as the second
-	// argument
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
-// swagger:route GET /song/{title} SongRequest
+// swagger:route GET /api/v0/song/{title} SongRequest
 // Get song
 // 
 // security:
@@ -82,11 +70,18 @@ type SongRequest struct {
 	Title string `json:"title"validate:"required,min=2,max=100,alpha_space"`
 }
 
-
+// swagger:route GET /api/v0/all
+// Get all songs
+// 
+// security:
+// - apiKey: []
+//
+// responses:
+//  200: Song
+//  400: CommonError
 func returnAllSongs(w http.ResponseWriter, r *http.Request){
 	fmt.Println("Endpoint Hit: returnAllSongs")
 	json.NewEncoder(w).Encode(Songs)
-
 }
 
 
