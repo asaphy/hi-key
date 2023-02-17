@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"golang.org/x/exp/slices"
 	"strings"
+	"github.com/gobuffalo/packr/v2"
 )
 
 // swagger:response Song
@@ -55,9 +56,17 @@ var KeyChords = map[string][]string{
 
 
 func handleRequests() {
+	box := packr.New("someBoxName", "./public")
+
+	s, err := box.FindString("swagger.yaml")
+  if err != nil {
+    log.Fatal(err)
+  }
+  fmt.Println(s)
+
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/api/v0/song/", returnSingleSong).Methods(http.MethodGet)
-	myRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+	myRouter.Handle("/swagger.yaml", http.FileServer(box))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
 	sh := middleware.SwaggerUI(opts, nil)
 	myRouter.Handle("/docs", sh)
